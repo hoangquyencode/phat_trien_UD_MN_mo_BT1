@@ -5,7 +5,8 @@ KIỂM TRA KHI LỖI docker compose up -d
 
 
 
-<img width="1899" height="343" alt="image" src="https://github.com/user-attachments/assets/9d37fd74-179c-407e-b810-62914ddc7624" />
+<img width="1432" height="232" alt="image" src="https://github.com/user-attachments/assets/ad1f8044-017e-41d1-877a-7cd2653972c9" />
+
 
 
 

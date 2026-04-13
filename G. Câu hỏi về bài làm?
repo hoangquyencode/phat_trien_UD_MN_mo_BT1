@@ -1,1 +1,74 @@
 
+# 1. Tại sao dùng Nginx làm Reverse Proxy thay vì trỏ thẳng Tunnel vào Node-RED?
+
+Việc sử dụng Nginx làm lớp đệm (Reverse Proxy) mang lại nhiều lợi ích quan trọng:
+
+Quản lý tập trung: Bạn có thể chạy nhiều dịch vụ (Node-RED, Home Assistant, Web server) trên cùng một máy chủ và dùng Nginx để phân luồng dựa trên domain hoặc path.
+
+Bảo mật: Nginx có khả năng lọc request, giới hạn tốc độ (rate limiting) và ẩn thông tin chi tiết của backend (Node-RED).
+
+Tối ưu hiệu suất: Nginx xử lý các file tĩnh (CSS, JS, hình ảnh) nhanh hơn Node-RED, giúp giảm tải cho ứng dụng chính.
+
+Tính linh hoạt: Dễ dàng cấu hình thêm các tính năng như xác thực cơ bản (Basic Auth) hoặc tùy chỉnh Header mà không cần can thiệp vào logic của Node-RED.
+
+# 2. Sự khác biệt giữa Mount file và Mount thư mục trong Docker
+
+
+| Đặc điểm | 📄 Mount File (Bind Mount) | 📁 Mount Thư mục (Bind Mount) |
+|----------|---------------------------|-------------------------------|
+| Phạm vi  | Chỉ 1 file duy nhất       | Toàn bộ thư mục               |
+| Sử dụng  | File cấu hình (nginx.conf) | Code, database, uploads       |
+| Lưu ý    | Xóa file → dễ lỗi container | Quản lý linh hoạt hơn         |
+
+
+# 3. Thay đổi file index.html ở máy Ubuntu, nội dung web có đổi ngay không?
+Có (thông thường là ngay lập tức).
+
+Tại sao: Khi bạn mount file/thư mục từ máy Ubuntu (Host) vào Container, cả hai thực tế đang nhìn vào cùng một dữ liệu trên ổ cứng. Khi bạn lưu file ở Ubuntu, Nginx trong container sẽ đọc đúng file đã sửa đó.
+
+Trường hợp ngoại lệ: Nếu trình duyệt của bạn đang lưu Cache (Bộ nhớ đệm), bạn có thể phải nhấn Ctrl + F5 để thấy thay đổi.
+
+# 4. Ý nghĩa của restart: always và restart: unless-stopped
+always: Container sẽ luôn tự khởi động lại nếu nó bị dừng (do lỗi hoặc crash). Nếu bạn khởi động lại máy tính (Ubuntu), container cũng sẽ tự chạy lại ngay khi Docker khởi động.
+
+unless-stopped: Tương tự như always, nhưng có một ngoại lệ: Nếu bạn chủ động dùng lệnh docker stop để dừng container, nó sẽ không tự khởi động lại khi máy tính khởi động lại, trừ khi bạn chạy nó thủ công.
+
+# 5. Dùng chung 1 Network trong Docker Compose
+Cách khai báo:
+Khai báo một network chung ở cấp cao nhất và chỉ định các service sử dụng nó.
+
+services:
+  nginx:
+    image: nginx
+    networks:
+      - my_network
+  nodered:
+    image: nodered/node-red
+    networks:
+      - my_network
+
+networks:
+  my_network:
+    driver: bridge
+
+Lợi ích:
+
+* Bảo mật: Các dịch vụ có thể giao tiếp với nhau qua "tên service" (ví dụ: http://nodered:1880) mà không cần mở cổng ra bên ngoài (Internet).
+
+* Cách ly: Các container trong cùng network mới thấy nhau, cô lập với các container khác trên cùng máy host.
+
+# 6. Sử dụng file .env và .gitignore cho Token
+Cách làm: Tạo file tên .env, viết CF_TOKEN=your_token_here. Trong docker-compose.yml, dùng ${CF_TOKEN}. Sau đó thêm dòng .env vào file .gitignore.
+
+Tại sao quan trọng: Khi bạn push code lên GitHub (đặc biệt là repo công khai), bất kỳ ai cũng có thể thấy Token của bạn nếu nó nằm trong code.
+Hacker có thể dùng Token này để chiếm quyền điều khiển Domain hoặc Cloudflare của bạn. .gitignore đảm bảo file chứa "bí mật" này chỉ nằm lại ở máy local của bạn.
+
+7. Tại sao nên thêm hậu tố :ro khi mount file cấu hình Nginx?
+:ro (Read-Only): Nghĩa là "Chỉ đọc".
+
+Lý do: Điều này ngăn chặn Container thay đổi hoặc xóa file cấu hình gốc trên máy Ubuntu. Đây là một quy tắc bảo mật (Principle of Least Privilege) — nếu container bị hack, 
+kẻ tấn công cũng không thể sửa đổi file cấu hình hệ thống của bạn.
+
+8. Dùng Cloudflare Tunnel có cần mở cổng (Open Port) không?
+Không cần thiết. Đây là ưu điểm lớn nhất của Tunnel. Cloudflare Tunnel tạo một kết nối ra bên ngoài (outbound) từ máy của bạn đến Cloudflare. 
+Nhờ đó, bạn không cần vào Router để "Port Forwarding" (mở cổng 80/443), giúp bảo vệ máy chủ khỏi các cuộc tấn công quét cổng (Port scanning) từ hacker.

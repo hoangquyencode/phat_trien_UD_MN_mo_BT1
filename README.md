@@ -158,13 +158,80 @@ ssh hoangquyen@192.168.1.147
 Cài docker bằng lệnh 
 sudo apt update
 sudo apt install docker.io -y
+sudo systemctl start docker
+sudo systemctl enable docker
+docker run hello-world
+sudo apt install docker-compose-v2 -y
+docker compose version
 
 
 
 
 
 
-<img width="1127" height="903" alt="image" src="https://github.com/user-attachments/assets/f5412921-1f08-4b08-b6ce-b36870c8a38f" />
+
+
+
+<img width="1087" height="628" alt="image" src="https://github.com/user-attachments/assets/4cca7adb-0b7b-4d6c-a400-35cb7c8f418d" />
+
+
+
+
+
+
+Tạo các file 
+
+
+myapp/
+│
+├── docker-compose.yml
+├── Dockerfile   
+├── requirements.txt
+│
+├── myapi/
+│   ├── app.py
+│   ├── templates/
+│   │   └── index.html   (nếu dùng Flask render)
+│   
+└── README.md
+
+
+tạo file index.html và thả code vào
+
+
+
+
+
+<img width="893" height="152" alt="image" src="https://github.com/user-attachments/assets/4ae9ffee-fe53-4783-b743-86aa2d2a19c6" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
